@@ -11,6 +11,7 @@ import (
   "flag"
   "fmt"
   "os"
+  "strings"
 )
 
 func main() {
@@ -32,7 +33,18 @@ func main() {
     exit("Failed to parse the provided CSV file")
   }
   problems := parseLines(lines)
-  fmt.Println(problems)
+  correct := 0
+  for i, p := range problems {
+    fmt.Printf("Problem #%d: %s = \n", i+1, p.q)
+    var answer string
+    // Scanf:入力する変数の型を変換指定子に従って型変換する
+    fmt.Scanf("%s\n", &answer)
+    if answer == p.a {
+      correct++
+    }
+  }
+
+  fmt.Printf("You scored %d out of %d.", correct, len(problems))
 }
 
 // 引数: 文字列を要素とする構造体の配列
@@ -44,7 +56,7 @@ func parseLines(lines [][]string) []problem {
     for i, line := range lines {
       ret[i] = problem{
         q: line[0],
-        a: line[1],
+        a: strings.TrimSpace(line[1]),
       }
     }
     return ret
