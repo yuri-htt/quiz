@@ -47,7 +47,7 @@ func main() {
   correct := 0
 problemloop:
   for i, p := range problems {
-    fmt.Printf("Problem #%d: %s = \n", i+1, p.q)
+    fmt.Printf("Problem #%d: %s\n", i+1, p.q)
     answerCh := make(chan string)
     go func() {
       var answer string
@@ -69,7 +69,7 @@ problemloop:
     }
   }
 
-  fmt.Printf("You scored %d out of %d.", correct, len(problems))
+  fmt.Printf("You scored %d out of %d.\n", correct, len(problems))
 }
 
 // 引数: 文字列を要素とする構造体の配列
