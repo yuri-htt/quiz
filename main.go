@@ -12,6 +12,7 @@ import (
   "fmt"
   "os"
   "strings"
+  "time"
 )
 
 func main() {
@@ -20,27 +21,51 @@ func main() {
   // - 引数2:オプションのデフォルト値　
   // - 引数3:オプションの説明
   csvFilename := flag.String("csv", "problems.csv", "a csv file in the format of 'question,answer'")
+  timeLimit := flag.Int("limit", 5, "the time limit for the quiz in seconds")
+
   // コマンドラインを解析して定義されたフラグにセットする
   flag.Parse()
+
   // csvFilenameはファイル名である文字列へのポインタ
   file, err := os.Open(*csvFilename)
   if err != nil {
     exit(fmt.Sprintf("Failed to open the CSV file: %s\n", *csvFilename))
   }
+
   r := csv.NewReader(file)
   lines, err := r.ReadAll()
   if err != nil {
     exit("Failed to parse the provided CSV file")
   }
+
   problems := parseLines(lines)
+  // Timerが終了すると現在の時刻がチャネルを使って構造体の要素Cに送信される(C <-chan Time)
+  timer := time.NewTimer(time.Duration(*timeLimit) * time.Second)
+  // チャネルからメッセージを受け取るまで待っている
+  //<-timer.C
+
   correct := 0
+problemloop:
   for i, p := range problems {
     fmt.Printf("Problem #%d: %s = \n", i+1, p.q)
-    var answer string
-    // Scanf:入力する変数の型を変換指定子に従って型変換する
-    fmt.Scanf("%s\n", &answer)
-    if answer == p.a {
-      correct++
+    answerCh := make(chan string)
+    go func() {
+      var answer string
+      // Scanf:入力する変数の型を変換指定子に従って型変換する
+      fmt.Scanf("%s\n", &answer)
+      answerCh <- answer
+    }()
+
+    select {
+    // 時間になったらメッセージを受け取り、その時点でスコアを出力
+    case <-timer.C:
+      // 時間になってチャネルがメッセージを受け取ったらfor文を抜ける
+      break problemloop
+    // 入力があればメッセージを受け取り、正解であればカウントアップ 
+    case answer := <- answerCh:
+      if answer == p.a {
+        correct++
+      }
     }
   }
 
